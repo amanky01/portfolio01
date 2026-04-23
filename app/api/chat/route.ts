@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getChatResponse } from '@/lib/gemini'
+import { getChatResponse } from '@/lib/chat'
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not set')
+    if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY) {
+      console.error('Neither GROQ_API_KEY nor GEMINI_API_KEY is set')
       return NextResponse.json(
         { error: 'AI service is not configured. Please contact the site owner.' },
         { status: 503 }
