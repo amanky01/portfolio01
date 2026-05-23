@@ -93,22 +93,20 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10 text-center px-6 max-w-4xl mx-auto pt-20">
-        {profile.profileImage && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-6"
-          >
-            <ProfileAvatar
-              src={profile.profileImage}
-              name={profile.name}
-              size={96}
-              className="rounded-full"
-              imageClassName="rounded-full"
-            />
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-6"
+        >
+          <ProfileAvatar
+            src={profile.profileImage}
+            name={profile.name}
+            size={96}
+            className="rounded-full"
+            imageClassName="rounded-full"
+          />
+        </motion.div>
 
         {profile.availableForWork && (
           <motion.div

@@ -60,6 +60,17 @@ export function extractGoogleDriveFileId(url: string): string | null {
   return null
 }
 
+/** Ordered embed URLs for a Google Drive file (try in sequence on error) */
+export function getGoogleDriveImageCandidates(url: string): string[] {
+  const id = extractGoogleDriveFileId(url)
+  if (!id) return []
+  return [
+    `https://lh3.googleusercontent.com/d/${id}`,
+    `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
+    `https://drive.google.com/uc?export=view&id=${id}`,
+  ]
+}
+
 /** Normalize external image URLs (Google Drive, relative paths) for embedding */
 export function getDirectImageUrl(url: string | undefined): string {
   const trimmed = url?.trim()
@@ -67,12 +78,39 @@ export function getDirectImageUrl(url: string | undefined): string {
 
   if (trimmed.startsWith('/')) return trimmed
 
-  const driveId = extractGoogleDriveFileId(trimmed)
-  if (driveId) {
-    return `https://drive.google.com/uc?export=view&id=${driveId}&sz=w800`
+  // Already a direct image URL — do not rewrite (preserves working lh3 / CDN links)
+  if (
+    /googleusercontent\.com/i.test(trimmed) ||
+    /drive\.google\.com\/uc\?/i.test(trimmed) ||
+    /\.(jpg|jpeg|png|webp|gif|avif)(\?.*)?$/i.test(trimmed)
+  ) {
+    return trimmed
+  }
+
+  const driveCandidates = getGoogleDriveImageCandidates(trimmed)
+  if (driveCandidates.length > 0) {
+    // lh3 format worked before the redesign; try it first
+    return driveCandidates[0]
   }
 
   return trimmed
+}
+
+/** All URLs to attempt when embedding (Drive gets multiple fallbacks) */
+export function getImageEmbedCandidates(url: string | undefined): string[] {
+  const trimmed = url?.trim()
+  if (!trimmed) return []
+
+  if (trimmed.startsWith('/')) return [trimmed]
+
+  if (/googleusercontent\.com/i.test(trimmed) || /drive\.google\.com\/uc\?/i.test(trimmed)) {
+    return [trimmed]
+  }
+
+  const driveCandidates = getGoogleDriveImageCandidates(trimmed)
+  if (driveCandidates.length > 0) return driveCandidates
+
+  return [trimmed]
 }
 
 export function getInitials(name: string | undefined, max = 2): string {

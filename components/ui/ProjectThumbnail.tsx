@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react'
-import Image from 'next/image'
-import { cn, getDirectImageUrl } from '@/lib/utils'
+import { useEffect, useMemo, useState } from 'react'
+import { cn, getImageEmbedCandidates } from '@/lib/utils'
 
 interface ProjectThumbnailProps {
   src?: string
@@ -18,9 +17,25 @@ export function ProjectThumbnail({
   className,
   aspect = 'video',
 }: ProjectThumbnailProps) {
+  const candidates = useMemo(() => getImageEmbedCandidates(src), [src])
+  const [candidateIndex, setCandidateIndex] = useState(0)
   const [failed, setFailed] = useState(false)
-  const resolved = getDirectImageUrl(src)
-  const showImage = Boolean(resolved) && !failed
+
+  useEffect(() => {
+    setCandidateIndex(0)
+    setFailed(false)
+  }, [src])
+
+  const currentSrc = candidates[candidateIndex]
+  const showImage = Boolean(currentSrc) && !failed
+
+  const handleError = () => {
+    if (candidateIndex < candidates.length - 1) {
+      setCandidateIndex((i) => i + 1)
+    } else {
+      setFailed(true)
+    }
+  }
 
   return (
     <div
@@ -31,15 +46,13 @@ export function ProjectThumbnail({
       )}
     >
       {showImage ? (
-        <Image
-          src={resolved}
+        <img
+          key={currentSrc}
+          src={currentSrc}
           alt={title}
-          fill
-          unoptimized
           referrerPolicy="no-referrer"
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, 33vw"
-          onError={() => setFailed(true)}
+          className="w-full h-full object-cover"
+          onError={handleError}
         />
       ) : (
         <div

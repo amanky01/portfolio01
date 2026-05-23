@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react'
-import Image from 'next/image'
-import { cn, getDirectImageUrl, getInitials } from '@/lib/utils'
+import { useEffect, useMemo, useState } from 'react'
+import { cn, getImageEmbedCandidates, getInitials } from '@/lib/utils'
 
 interface ProfileAvatarProps {
   src?: string
@@ -18,9 +17,25 @@ export function ProfileAvatar({
   imageClassName,
   size = 208,
 }: ProfileAvatarProps) {
+  const candidates = useMemo(() => getImageEmbedCandidates(src), [src])
+  const [candidateIndex, setCandidateIndex] = useState(0)
   const [failed, setFailed] = useState(false)
-  const resolved = getDirectImageUrl(src)
-  const showImage = Boolean(resolved) && !failed
+
+  useEffect(() => {
+    setCandidateIndex(0)
+    setFailed(false)
+  }, [src])
+
+  const currentSrc = candidates[candidateIndex]
+  const showImage = Boolean(currentSrc) && !failed
+
+  const handleError = () => {
+    if (candidateIndex < candidates.length - 1) {
+      setCandidateIndex((i) => i + 1)
+    } else {
+      setFailed(true)
+    }
+  }
 
   return (
     <div
@@ -31,15 +46,14 @@ export function ProfileAvatar({
       style={{ width: size, height: size }}
     >
       {showImage ? (
-        <Image
-          src={resolved}
+        // Native img — more reliable than next/image for Google Drive redirects
+        <img
+          key={currentSrc}
+          src={currentSrc}
           alt={name ? `${name} profile photo` : 'Profile photo'}
-          fill
-          unoptimized
           referrerPolicy="no-referrer"
-          className={cn('object-cover', imageClassName)}
-          sizes={`${size}px`}
-          onError={() => setFailed(true)}
+          className={cn('w-full h-full object-cover', imageClassName)}
+          onError={handleError}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
