@@ -23,7 +23,7 @@ export interface ProfileDataItem {
 
 const DEFAULT_PROFILE: ProfileDataItem = {
   name: 'Aman Kumar Yadav',
-  tagline: 'AI / ML Engineer & Intelligent Systems Developer',
+  tagline: 'AI / ML Engineer building production intelligent systems',
   bio: '',
   email: '',
   github: '',

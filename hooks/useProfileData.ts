@@ -26,7 +26,7 @@ export interface ProfileData {
 
 const DEFAULT_PROFILE: ProfileData = {
   name: 'Aman Kumar Yadav',
-  tagline: 'AI / ML Engineer & Intelligent Systems Developer',
+  tagline: 'AI / ML Engineer building production intelligent systems',
   bio: '',
   email: '',
   contactNumber: '',

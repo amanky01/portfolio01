@@ -28,33 +28,59 @@ export function calculateReadTime(content: string): number {
 }
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  'AI': '#00fff0',
-  'ML': '#ff00ff',
-  'Robotics': '#ffff00',
-  'Web': '#00ff88',
-  'CV': '#ff6600',
-  'Other': '#8888ff',
+  'AI': '#38bdf8',
+  'ML': '#a78bfa',
+  'Robotics': '#fbbf24',
+  'Web': '#34d399',
+  'CV': '#f472b6',
+  'Other': '#94a3b8',
 }
 
 export const SKILL_CATEGORY_COLORS: Record<string, string> = {
-  'AI/ML': '#00fff0',
-  'Web Dev': '#00ff88',
-  'Robotics': '#ffff00',
-  'Computer Vision': '#ff00ff',
-  'Languages': '#ff6600',
-  'Tools': '#8888ff',
+  'AI/ML': '#38bdf8',
+  'Web Dev': '#34d399',
+  'Robotics': '#fbbf24',
+  'Computer Vision': '#a78bfa',
+  'Languages': '#f472b6',
+  'Tools': '#94a3b8',
 }
 
-export function getDirectImageUrl(url: string | undefined): string {
-  if (!url) return ''
-  
-  // Google Drive conversion
-  const driveRegex = /(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/
-  const match = url.match(driveRegex)
-  
-  if (match && match[1]) {
-    return `https://lh3.googleusercontent.com/d/${match[1]}`
+/** Extract Google Drive file ID from common share/embed URL formats */
+export function extractGoogleDriveFileId(url: string): string | null {
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/uc\?(?:export=view&)?id=([a-zA-Z0-9_-]+)/,
+    /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/,
+  ]
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) return match[1]
   }
-  
-  return url
+  return null
+}
+
+/** Normalize external image URLs (Google Drive, relative paths) for embedding */
+export function getDirectImageUrl(url: string | undefined): string {
+  const trimmed = url?.trim()
+  if (!trimmed) return ''
+
+  if (trimmed.startsWith('/')) return trimmed
+
+  const driveId = extractGoogleDriveFileId(trimmed)
+  if (driveId) {
+    return `https://drive.google.com/uc?export=view&id=${driveId}&sz=w800`
+  }
+
+  return trimmed
+}
+
+export function getInitials(name: string | undefined, max = 2): string {
+  if (!name?.trim()) return 'AK'
+  return name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, max)
+    .toUpperCase()
 }

@@ -2,16 +2,10 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Link from 'next/link'
-import { FaGithub, FaExternalLinkAlt } from 'react-icons/fa'
+import { FaGithub, FaExternalLinkAlt, FaArrowRight } from 'react-icons/fa'
 import type { Project } from '@/types'
-
-const CAT_COLORS: Record<string, string> = {
-  AI: '#00fff0', ML: '#ff00ff', Robotics: '#ffff00', Web: '#00ff88', CV: '#ff00ff', Other: '#8888ff',
-}
-
-const CAT_ACCENT: Record<string, string> = {
-  AI: '#00fff0', ML: '#ff00ff', Robotics: '#ffff00', Web: '#00ff88', CV: '#ff00ff', Other: '#8888ff',
-}
+import { CATEGORY_COLORS } from '@/lib/utils'
+import { SectionHeader, Card, Badge, Button, ProjectThumbnail } from '@/components/ui'
 
 interface FeaturedProjectsProps {
   projects: Project[]
@@ -22,107 +16,102 @@ export default function FeaturedProjects({ projects }: FeaturedProjectsProps) {
   const isInView = useInView(ref, { once: true, margin: '-80px' })
 
   return (
-    <section id="projects-preview" className="relative py-24 overflow-hidden" ref={ref}>
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(0,255,240,0.04) 0%, transparent 60%)' }} />
-
+    <section id="projects-preview" className="relative py-24 md:py-32 overflow-hidden" ref={ref}>
       <div className="max-w-6xl mx-auto px-6">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
         >
-          <p className="font-mono-tech text-sm mb-3" style={{ color: 'var(--magenta)' }}>
-            &gt; ls projects/ --featured
-          </p>
-          <h2 className="section-title">Featured Projects</h2>
+          <SectionHeader
+            eyebrow="Projects"
+            title="Featured projects"
+            description="Selected work across AI, ML, and full-stack development"
+            align="center"
+          />
         </motion.div>
 
         {projects.length === 0 ? (
           <div className="text-center py-12">
-            <p className="font-mono-tech text-sm mb-2" style={{ color: 'var(--dim)' }}>
-              // No featured projects yet
-            </p>
-            <p className="font-mono-tech text-xs" style={{ color: 'rgba(74,74,106,0.5)' }}>
+            <p className="text-sm text-[var(--text-muted)] mb-1">No featured projects yet</p>
+            <p className="text-xs text-[var(--text-muted)]">
               Add projects and mark them as featured in the admin panel
             </p>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-6">
             {projects.map((project, i) => {
-              const color = CAT_COLORS[project.category] ?? '#00fff0'
+              const color = CATEGORY_COLORS[project.category] ?? '#38bdf8'
               return (
                 <motion.div
                   key={project._id}
-                  initial={{ opacity: 0, y: 40 }}
+                  initial={{ opacity: 0, y: 24 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ duration: 0.5, delay: i * 0.15 }}
-                  className="cyber-card rounded-xl overflow-hidden group flex flex-col"
-                  style={{ borderColor: 'rgba(255,255,255,0.06)', transition: 'all 0.3s' }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = color
-                    ;(e.currentTarget as HTMLElement).style.boxShadow = `0 0 20px ${color}22`
-                    ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-6px)'
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'
-                    ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-                    ;(e.currentTarget as HTMLElement).style.transform = 'none'
-                  }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
                 >
-                  {/* Top bar */}
-                  <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
-
-                  <div className="p-6 flex flex-col flex-1">
-                    {/* Category badge */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="font-mono-tech text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: `${CAT_ACCENT[project.category] ?? color}18`, color: CAT_ACCENT[project.category] ?? color, border: `1px solid ${CAT_ACCENT[project.category] ?? color}33` }}>
+                  <Card className="p-0 overflow-hidden flex flex-col h-full group">
+                    <Link href={`/projects/${project._id}`} className="block">
+                      <ProjectThumbnail
+                        src={project.image}
+                        title={project.title}
+                        categoryColor={color}
+                      />
+                    </Link>
+                    <div className="p-6 flex flex-col flex-1">
+                      <Badge variant="accent" className="w-fit mb-3">
                         {project.category}
-                      </span>
-                    </div>
+                      </Badge>
 
-                    <h3 className="font-orbitron font-bold text-sm md:text-base mb-3" style={{ color: '#fff' }}>
-                      {project.title}
-                    </h3>
+                      <Link href={`/projects/${project._id}`}>
+                        <h3 className="font-semibold text-[var(--text)] mb-2 group-hover:text-[var(--accent)] transition-colors">
+                          {project.title}
+                        </h3>
+                      </Link>
 
-                    <p className="font-body text-sm leading-relaxed flex-1 mb-4" style={{ color: 'rgba(200,200,232,0.65)' }}>
-                      {project.description}
-                    </p>
+                      <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1 mb-4 line-clamp-3">
+                        {project.description}
+                      </p>
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5 mb-5">
-                      {project.tags.map(tag => (
-                        <span key={tag} className="font-mono-tech text-xs px-2 py-0.5 rounded"
-                          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--dim)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {project.tags.slice(0, 4).map((tag) => (
+                          <Badge key={tag} variant="outline">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
 
-                    {/* Links */}
-                    <div className="flex gap-3">
-                      {project.github && (
-                        <a href={project.github} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 font-mono-tech text-xs transition-all duration-200 hover:scale-105"
-                          style={{ color: 'var(--dim)' }}
-                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--dim)'}
+                      <div className="flex flex-wrap gap-4 mt-auto items-center">
+                        <Link
+                          href={`/projects/${project._id}`}
+                          className="flex items-center gap-1 text-xs text-[var(--accent)] hover:opacity-80 focus-ring rounded"
                         >
-                          <FaGithub size={13} /> Code
-                        </a>
-                      )}
-                      {project.demo && (
-                        <a href={project.demo} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 font-mono-tech text-xs transition-all duration-200 hover:scale-105"
-                          style={{ color }}
-                        >
-                          <FaExternalLinkAlt size={11} /> Live Demo
-                        </a>
-                      )}
+                          Case study <FaArrowRight size={10} />
+                        </Link>
+                        {project.github && (
+                          <a
+                            href={project.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors focus-ring rounded"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FaGithub size={13} /> Code
+                          </a>
+                        )}
+                        {project.demo && (
+                          <a
+                            href={project.demo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-[var(--accent)] focus-ring rounded"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FaExternalLinkAlt size={11} /> Demo
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Card>
                 </motion.div>
               )
             })}
@@ -132,15 +121,13 @@ export default function FeaturedProjects({ projects }: FeaturedProjectsProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.7 }}
+          transition={{ delay: 0.5 }}
           className="text-center mt-12"
         >
-          <Link
-            href="/projects"
-            className="neon-border-animated inline-flex items-center gap-2 px-8 py-3 font-orbitron font-semibold text-sm tracking-wider uppercase transition-all duration-300 hover:scale-105 rounded"
-            style={{ color: 'var(--cyan)', background: 'rgba(0,255,240,0.05)' }}
-          >
-            View All Projects →
+          <Link href="/projects">
+            <Button variant="outline" size="lg">
+              View all projects →
+            </Button>
           </Link>
         </motion.div>
       </div>

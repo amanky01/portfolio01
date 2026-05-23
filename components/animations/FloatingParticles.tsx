@@ -5,6 +5,7 @@ export default function FloatingParticles() {
   const ref = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const canvas = ref.current!
     const ctx = canvas.getContext('2d')!
     let W = canvas.width = canvas.offsetWidth
@@ -15,7 +16,7 @@ export default function FloatingParticles() {
       r: Math.random() * 2 + 0.5,
       vx: (Math.random() - 0.5) * 0.3, vy: -Math.random() * 0.5 - 0.2,
       alpha: Math.random() * 0.6 + 0.2,
-      color: Math.random() > 0.5 ? '#00fff0' : '#ff00ff',
+      color: Math.random() > 0.5 ? '#38bdf8' : '#a78bfa',
     }))
 
     let frame: number

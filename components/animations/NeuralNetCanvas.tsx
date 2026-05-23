@@ -6,13 +6,14 @@ interface Node {
   radius: number; color: string; pulsePhase: number; active: boolean
 }
 
-const COLORS = ['#00fff0', '#ff00ff', '#00ff88', '#ffff00']
+const COLORS = ['#38bdf8', '#a78bfa', '#34d399', '#94a3b8']
 
 export default function NeuralNetCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const frameRef = useRef<number>(0)
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
@@ -64,7 +65,7 @@ export default function NeuralNetCanvas() {
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(0,255,240,${alpha * (0.5 + pulse * 0.5)})`
+            ctx.strokeStyle = `rgba(56,189,248,${alpha * (0.5 + pulse * 0.5)})`
             ctx.lineWidth = 0.5
             ctx.stroke()
 
@@ -72,7 +73,7 @@ export default function NeuralNetCanvas() {
             if (dist < 120 && (a.active || b.active)) {
               ctx.beginPath()
               ctx.arc(sx, sy, 1.5, 0, Math.PI * 2)
-              ctx.fillStyle = `rgba(0,255,240,${alpha * 2})`
+              ctx.fillStyle = `rgba(56,189,248,${alpha * 2})`
               ctx.fill()
             }
           }

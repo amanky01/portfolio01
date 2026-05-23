@@ -1,15 +1,33 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import NeuralNetCanvas from '@/components/animations/NeuralNetCanvas'
 import toast from 'react-hot-toast'
-import { FaGithub, FaLinkedin, FaEnvelope, FaMapMarkerAlt, FaTwitter, FaInstagram, FaWhatsapp, FaPhone } from 'react-icons/fa'
+import {
+  FaGithub,
+  FaLinkedin,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaInstagram,
+  FaWhatsapp,
+  FaPhone,
+} from 'react-icons/fa'
 import { useProfileData } from '@/hooks/useProfileData'
+import { SectionHeader, Card, Badge, Button } from '@/components/ui'
+import { cn } from '@/lib/utils'
+
+const fieldClass =
+  'w-full rounded-lg border border-[var(--border)] bg-white/[0.04] px-4 py-2.5 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus-ring focus:border-[var(--accent)]/50 outline-none transition-colors'
 
 export default function ContactPage() {
   const { profile } = useProfileData()
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [loading, setLoading] = useState(false)
+  const [reduceMotion, setReduceMotion] = useState(false)
+
+  useEffect(() => {
+    setReduceMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [])
 
   const ensureAbsoluteUrl = (url: string | undefined) => {
     if (!url) return undefined
@@ -38,56 +56,49 @@ export default function ContactPage() {
   }
 
   const contactInfo = [
-    { 
-      icon: <FaEnvelope />, 
-      label: 'Email', 
-      value: profile.email || 'Not provided', 
-      href: profile.email ? `mailto:${profile.email}` : null, 
-      color: '#00fff0' 
+    {
+      icon: <FaEnvelope />,
+      label: 'Email',
+      value: profile.email || 'Not provided',
+      href: profile.email ? `mailto:${profile.email}` : null,
     },
     {
       icon: <FaPhone />,
       label: 'Phone',
       value: profile.contactNumber || 'Not provided',
       href: toPhoneHref(profile.contactNumber) || null,
-      color: '#22c55e'
     },
     {
       icon: <FaWhatsapp />,
       label: 'WhatsApp',
       value: profile.whatsapp || 'Not provided',
       href: toWhatsappHref(profile.whatsapp) || null,
-      color: '#25D366'
     },
     {
       icon: <FaInstagram />,
       label: 'Instagram',
       value: profile.instagram || 'Not provided',
       href: toInstagramHref(profile.instagram) || null,
-      color: '#E1306C'
     },
-    { 
-      icon: <FaGithub />, 
-      label: 'GitHub', 
-      value: profile.github || 'Not provided', 
-      href: ensureAbsoluteUrl(profile.github), 
-      color: '#ff00ff' 
+    {
+      icon: <FaGithub />,
+      label: 'GitHub',
+      value: profile.github || 'Not provided',
+      href: ensureAbsoluteUrl(profile.github),
     },
-    { 
-      icon: <FaLinkedin />, 
-      label: 'LinkedIn', 
-      value: profile.linkedin || 'Not provided', 
-      href: ensureAbsoluteUrl(profile.linkedin), 
-      color: '#00ff88' 
+    {
+      icon: <FaLinkedin />,
+      label: 'LinkedIn',
+      value: profile.linkedin || 'Not provided',
+      href: ensureAbsoluteUrl(profile.linkedin),
     },
-    { 
-      icon: <FaMapMarkerAlt />, 
-      label: 'Location', 
-      value: profile.location || 'Remote / Earth', 
-      href: null, 
-      color: '#ffff00' 
+    {
+      icon: <FaMapMarkerAlt />,
+      label: 'Location',
+      value: profile.location || 'Remote',
+      href: null,
     },
-  ].filter(info => info.value !== 'Not provided' || info.label === 'Email')
+  ].filter((info) => info.value !== 'Not provided' || info.label === 'Email')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,7 +111,7 @@ export default function ContactPage() {
       })
       const data = await res.json()
       if (data.success) {
-        toast.success('Message sent! I\'ll get back to you soon.')
+        toast.success("Message sent! I'll get back to you soon.")
         setForm({ name: '', email: '', subject: '', message: '' })
       } else {
         toast.error(data.error || 'Failed to send message')
@@ -112,201 +123,158 @@ export default function ContactPage() {
     }
   }
 
-  const inputClass = "w-full px-4 py-3 rounded-lg font-mono-tech text-sm outline-none transition-all duration-300"
-  const inputStyle = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(0,255,240,0.2)',
-    color: 'var(--text)',
-  }
-
   return (
     <main className="min-h-screen pt-20 pb-20 relative overflow-hidden">
-      <div className="fixed inset-0 z-0 opacity-30">
-        <NeuralNetCanvas />
-        <div className="absolute inset-0" style={{ background: 'rgba(7,7,15,0.75)' }} />
-      </div>
+      {!reduceMotion && (
+        <div className="fixed inset-0 z-0 opacity-20">
+          <NeuralNetCanvas />
+          <div className="absolute inset-0 bg-[var(--bg)]/85" />
+        </div>
+      )}
 
       <div className="relative z-10 max-w-5xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-14 pt-8"
-        >
-          <p className="font-mono-tech text-sm mb-3" style={{ color: 'var(--magenta)' }}>
-            &gt; ssh contact@{profile.name?.toLowerCase().replace(/\s/g, '') || 'aman'}.dev
-          </p>
-          <h1 className="section-title text-4xl md:text-5xl">Get In Touch</h1>
-          <p className="font-body mt-4 text-sm" style={{ color: 'var(--dim)' }}>
-            {profile.tagline || 'AI / ML Engineer'} | Available for new opportunities
-          </p>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="pt-8">
+          <SectionHeader
+            eyebrow="Contact"
+            title="Get in touch"
+            description={
+              profile.tagline
+                ? `${profile.tagline} · Available for new opportunities`
+                : 'Available for new opportunities'
+            }
+            align="center"
+          />
         </motion.div>
 
         <div className="grid lg:grid-cols-5 gap-8">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.15 }}
             className="lg:col-span-2 flex flex-col gap-4"
           >
-            <div className="cyber-card rounded-xl p-6 hud-corner" style={{ borderColor: 'rgba(0,255,240,0.2)' }}>
-              <div className="font-orbitron font-bold text-sm mb-2" style={{ color: 'var(--cyan)' }}>
-                AVAILABILITY
-              </div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`w-2 h-2 rounded-full ${profile.availableForWork ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                <span className="font-mono-tech text-sm" style={{ color: profile.availableForWork ? 'var(--green)' : 'var(--magenta)' }}>
-                  {profile.availableForWork ? 'Open to opportunities' : 'Not currently available'}
-                </span>
-              </div>
-              <p className="font-body text-sm" style={{ color: 'rgba(200,200,232,0.65)', lineHeight: 1.7 }}>
-                {profile.availableForWork 
-                  ? `Currently seeking internships, research positions, and freelance projects. Let's build something intelligent together.`
-                  : `Currently focused on internal projects, but feel free to reach out for future collaborations or research discussions.`}
+            <Card>
+              <p className="text-sm font-medium text-[var(--text)] mb-2">Availability</p>
+              {profile.availableForWork ? (
+                <Badge variant="success" className="mb-3">
+                  Open to opportunities
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="mb-3">
+                  Not currently available
+                </Badge>
+              )}
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+                {profile.availableForWork
+                  ? 'Currently seeking internships, research positions, and freelance projects.'
+                  : 'Focused on current projects, but feel free to reach out for future collaborations.'}
               </p>
-            </div>
+            </Card>
 
             {contactInfo.map((info, i) => (
               <motion.div
                 key={info.label}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + i * 0.1 }}
+                transition={{ delay: 0.2 + i * 0.06 }}
               >
                 {info.href ? (
-                  <a href={info.href} target="_blank" rel="noopener noreferrer"
-                    className="cyber-card rounded-xl p-4 flex items-center gap-4 group transition-all duration-300"
-                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = info.color
-                      ;(e.currentTarget as HTMLElement).style.boxShadow = `0 0 15px ${info.color}22`
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-                    }}
-                  >
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${info.color}15`, color: info.color, border: `1px solid ${info.color}30` }}>
-                      {info.icon}
-                    </div>
-                    <div>
-                      <div className="font-mono-tech text-xs mb-0.5" style={{ color: 'var(--dim)' }}>{info.label}</div>
-                      <div className="font-orbitron text-xs font-semibold group-hover:underline truncate max-w-[180px]" style={{ color: info.color }}>{info.value}</div>
-                    </div>
+                  <a href={info.href} target="_blank" rel="noopener noreferrer" className="block">
+                    <Card className="p-4 flex items-center gap-4 group">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[var(--accent-muted)] text-[var(--accent)]">
+                        {info.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs text-[var(--text-muted)] mb-0.5">{info.label}</div>
+                        <div className="text-sm font-medium text-[var(--text)] truncate group-hover:text-[var(--accent)] transition-colors">
+                          {info.value}
+                        </div>
+                      </div>
+                    </Card>
                   </a>
                 ) : (
-                  <div className="cyber-card rounded-xl p-4 flex items-center gap-4"
-                    style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${info.color}15`, color: info.color, border: `1px solid ${info.color}30` }}>
+                  <Card className="p-4 flex items-center gap-4">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-[var(--accent-muted)] text-[var(--accent)]">
                       {info.icon}
                     </div>
                     <div>
-                      <div className="font-mono-tech text-xs mb-0.5" style={{ color: 'var(--dim)' }}>{info.label}</div>
-                      <div className="font-orbitron text-xs font-semibold" style={{ color: info.color }}>{info.value}</div>
+                      <div className="text-xs text-[var(--text-muted)] mb-0.5">{info.label}</div>
+                      <div className="text-sm font-medium text-[var(--text)]">{info.value}</div>
                     </div>
-                  </div>
+                  </Card>
                 )}
               </motion.div>
             ))}
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
             className="lg:col-span-3"
           >
-            <div className="cyber-card rounded-xl p-8 hud-corner" style={{ borderColor: 'rgba(0,255,240,0.2)' }}>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="font-mono-tech text-xs ml-2" style={{ color: 'var(--dim)' }}>compose_message.sh</span>
-              </div>
-
+            <Card className="p-8">
+              <h2 className="text-lg font-semibold text-[var(--text)] mb-6">Send a message</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="font-mono-tech text-xs mb-2 block" style={{ color: 'var(--cyan)' }}>
-                      $ name
+                    <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">
+                      Name <span className="text-[var(--accent)]">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                       placeholder="Your name"
-                      className={inputClass}
-                      style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
-                      onBlur={e => (e.target.style.borderColor = 'rgba(0,255,240,0.2)')}
+                      className={fieldClass}
                     />
                   </div>
                   <div>
-                    <label className="font-mono-tech text-xs mb-2 block" style={{ color: 'var(--cyan)' }}>
-                      $ email
+                    <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">
+                      Email <span className="text-[var(--accent)]">*</span>
                     </label>
                     <input
                       type="email"
                       required
                       value={form.email}
-                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                       placeholder="your@email.com"
-                      className={inputClass}
-                      style={inputStyle}
-                      onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
-                      onBlur={e => (e.target.style.borderColor = 'rgba(0,255,240,0.2)')}
+                      className={fieldClass}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="font-mono-tech text-xs mb-2 block" style={{ color: 'var(--cyan)' }}>
-                    $ subject
+                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">
+                    Subject <span className="text-[var(--accent)]">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={form.subject}
-                    onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                     placeholder="What's this about?"
-                    className={inputClass}
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
-                    onBlur={e => (e.target.style.borderColor = 'rgba(0,255,240,0.2)')}
+                    className={fieldClass}
                   />
                 </div>
                 <div>
-                  <label className="font-mono-tech text-xs mb-2 block" style={{ color: 'var(--cyan)' }}>
-                    $ message
+                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">
+                    Message <span className="text-[var(--accent)]">*</span>
                   </label>
                   <textarea
                     required
                     rows={5}
                     value={form.message}
-                    onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                     placeholder="Tell me about your project or opportunity..."
-                    className={`${inputClass} resize-none`}
-                    style={inputStyle}
-                    onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
-                    onBlur={e => (e.target.style.borderColor = 'rgba(0,255,240,0.2)')}
+                    className={cn(fieldClass, 'resize-y min-h-[120px]')}
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 font-orbitron font-bold text-sm tracking-widest uppercase rounded-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 mt-2"
-                  style={{
-                    background: loading ? 'rgba(0,255,240,0.05)' : 'rgba(0,255,240,0.1)',
-                    border: '1px solid var(--cyan)',
-                    color: 'var(--cyan)',
-                    boxShadow: loading ? 'none' : '0 0 20px rgba(0,255,240,0.2)',
-                  }}
-                >
-                  {loading ? '// Transmitting...' : '> Send Message_'}
-                </button>
+                <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
+                  {loading ? 'Sending...' : 'Send message'}
+                </Button>
               </form>
-            </div>
+            </Card>
           </motion.div>
         </div>
       </div>

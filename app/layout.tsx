@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
 import ChatBot from '@/components/chat/ChatBot'
@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: '#0a0a0f',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="scroll-smooth">
@@ -29,10 +33,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           position="top-right"
           toastOptions={{
             style: {
-              background: '#0f0f1e',
-              color: '#c8c8e8',
-              border: '1px solid #00fff0',
-              fontFamily: 'Share Tech Mono, monospace',
+              background: 'var(--surface-elevated)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              fontFamily: 'Inter, system-ui, sans-serif',
               fontSize: '14px',
             },
           }}

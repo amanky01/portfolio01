@@ -7,6 +7,11 @@ import {
   FaFolder, FaNewspaper, FaTools, FaBriefcase, FaEnvelope,
   FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain, FaUserSecret
 } from 'react-icons/fa'
+import { Button, ProfileAvatar } from '@/components/ui'
+import { cn } from '@/lib/utils'
+
+const adminFieldClass =
+  'w-full rounded-lg border border-[var(--border)] bg-white/[0.04] px-4 py-2.5 text-sm text-[var(--text)] outline-none transition-colors focus:border-[var(--accent)]/50'
 
 /* ── Types ─────────────────────────────────────────────── */
 type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'skills' | 'experience' | 'messages' | 'privateNotes'
@@ -14,56 +19,34 @@ type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'skills' | 'experience' 
 interface FormField { label: string; key: string; type: string; options?: string[] }
 
 /* ── Reusable mini-components ──────────────────────────── */
-const NeonInput = ({
+const AdminField = ({
   label, value, onChange, type = 'text', options, required
 }: {
   label: string; value: string | number | boolean; onChange: (v: string) => void
   type?: string; options?: string[]; required?: boolean
-}) => {
-  const base = {
-    background: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(0,255,240,0.2)',
-    color: 'var(--text)',
-    outline: 'none',
-    fontFamily: '"Share Tech Mono", monospace',
-    fontSize: '13px',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    width: '100%',
-    transition: 'border-color 0.2s',
-  }
-  const focus = (e: React.FocusEvent<HTMLElement>) =>
-    ((e.target as HTMLElement).style.borderColor = 'var(--cyan)')
-  const blur = (e: React.FocusEvent<HTMLElement>) =>
-    ((e.target as HTMLElement).style.borderColor = 'rgba(0,255,240,0.2)')
-
-  return (
-    <div>
-      <label className="font-mono-tech text-xs block mb-1.5" style={{ color: 'var(--cyan)' }}>
-        {label}{required && <span style={{ color: 'var(--magenta)' }}> *</span>}
-      </label>
-      {type === 'select' && options ? (
-        <select value={String(value)} onChange={e => onChange(e.target.value)}
-          style={{ ...base, cursor: 'pointer' }} onFocus={focus} onBlur={blur}>
-          {options.map(o => <option key={o} value={o} style={{ background: '#0d0d1a' }}>{o}</option>)}
-        </select>
-      ) : type === 'textarea' ? (
-        <textarea value={String(value)} onChange={e => onChange(e.target.value)}
-          rows={4} style={{ ...base, resize: 'vertical' }} onFocus={focus} onBlur={blur} />
-      ) : type === 'checkbox' ? (
-        <div className="flex items-center gap-2 mt-1">
-          <input type="checkbox" checked={value === 'true'}
-            onChange={e => onChange(String(e.target.checked))}
-            className="w-4 h-4 accent-cyan-400" />
-          <span className="font-mono-tech text-xs" style={{ color: 'var(--text)' }}>Yes</span>
-        </div>
-      ) : (
-        <input type={type} value={String(value)} onChange={e => onChange(e.target.value)}
-          required={required} style={base} onFocus={focus} onBlur={blur} />
-      )}
-    </div>
-  )
-}
+}) => (
+  <div>
+    <label className="text-sm font-medium text-[var(--text-muted)] block mb-1.5">
+      {label}{required && <span className="text-[var(--accent)]"> *</span>}
+    </label>
+    {type === 'select' && options ? (
+      <select value={String(value)} onChange={e => onChange(e.target.value)} className={cn(adminFieldClass, 'cursor-pointer')}>
+        {options.map(o => <option key={o} value={o} className="bg-[var(--surface)]">{o}</option>)}
+      </select>
+    ) : type === 'textarea' ? (
+      <textarea value={String(value)} onChange={e => onChange(e.target.value)} rows={4} className={cn(adminFieldClass, 'resize-y min-h-[100px]')} />
+    ) : type === 'checkbox' ? (
+      <div className="flex items-center gap-2 mt-1">
+        <input type="checkbox" checked={value === 'true' || value === true}
+          onChange={e => onChange(String(e.target.checked))}
+          className="w-4 h-4 accent-[var(--accent)]" />
+        <span className="text-sm text-[var(--text)]">Yes</span>
+      </div>
+    ) : (
+      <input type={type} value={String(value)} onChange={e => onChange(e.target.value)} required={required} className={adminFieldClass} />
+    )}
+  </div>
+)
 
 /* ── CRUD Modal ──────────────────────────────────────────── */
 function CrudModal({
@@ -92,11 +75,10 @@ function CrudModal({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-6"
-        style={{ background: '#0d0d1a', border: '1px solid rgba(0,255,240,0.3)', boxShadow: '0 0 40px rgba(0,255,240,0.12)' }}
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-6 surface-card"
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-orbitron font-bold text-sm" style={{ color: 'var(--cyan)' }}>{title}</h3>
+          <h3 className="font-semibold text-[var(--text)]">{title}</h3>
           <button onClick={onClose} style={{ color: 'var(--dim)' }} className="hover:text-red-400 transition-colors">
             <FaTimes size={14} />
           </button>
@@ -104,7 +86,7 @@ function CrudModal({
 
         <div className="space-y-4">
           {fields.map(f => (
-            <NeonInput
+            <AdminField
               key={f.key}
               label={f.label}
               value={String(form[f.key] ?? '')}
@@ -116,16 +98,12 @@ function CrudModal({
         </div>
 
         <div className="flex gap-3 mt-6">
-          <button onClick={() => onSave(form)} disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 font-orbitron text-xs font-bold tracking-widest uppercase rounded-lg transition-all disabled:opacity-50"
-            style={{ background: 'rgba(0,255,240,0.1)', border: '1px solid var(--cyan)', color: 'var(--cyan)' }}>
+          <Button onClick={() => onSave(form)} disabled={loading} variant="primary" className="flex-1">
             <FaSave size={12} /> {loading ? 'Saving...' : 'Save'}
-          </button>
-          <button onClick={onClose}
-            className="px-6 py-2.5 font-orbitron text-xs font-bold uppercase rounded-lg transition-all"
-            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--dim)' }}>
+          </Button>
+          <Button onClick={onClose} variant="secondary">
             Cancel
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>
@@ -139,25 +117,20 @@ function DeleteConfirm({ onConfirm, onCancel }: { onConfirm: () => void; onCance
       style={{ background: 'rgba(0,0,0,0.85)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-        className="rounded-xl p-6 w-80 text-center"
-        style={{ background: '#0d0d1a', border: '1px solid rgba(255,0,0,0.4)' }}
+        className="rounded-xl p-6 w-80 text-center surface-card border-red-500/30"
       >
         <div className="text-3xl mb-3">⚠️</div>
-        <p className="font-orbitron text-sm text-white mb-2">Confirm Delete</p>
-        <p className="font-mono-tech text-xs mb-6" style={{ color: 'var(--dim)' }}>
+        <p className="font-semibold text-[var(--text)] mb-2">Confirm delete</p>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
           This action cannot be undone.
         </p>
         <div className="flex gap-3">
-          <button onClick={onConfirm}
-            className="flex-1 py-2 font-orbitron text-xs font-bold uppercase rounded-lg"
-            style={{ background: 'rgba(255,0,0,0.15)', border: '1px solid rgba(255,0,0,0.4)', color: '#ff4444' }}>
+          <Button onClick={onConfirm} variant="primary" className="flex-1 !bg-red-500/20 !text-red-400 !border-red-500/40">
             Delete
-          </button>
-          <button onClick={onCancel}
-            className="flex-1 py-2 font-orbitron text-xs font-bold uppercase rounded-lg"
-            style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'var(--dim)' }}>
+          </Button>
+          <Button onClick={onCancel} variant="secondary" className="flex-1">
             Cancel
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>
@@ -189,14 +162,13 @@ const PROFILE_FIELDS: FormField[] = [
   { label: 'GitHub URL', key: 'github', type: 'text' },
   { label: 'LinkedIn URL', key: 'linkedin', type: 'text' },
   { label: 'Twitter / X URL', key: 'twitter', type: 'text' },
-  { label: 'Profile Image URL', key: 'profileImage', type: 'text' },
   { label: 'Resume / CV URL', key: 'resumeUrl', type: 'text' },
   { label: 'Available for Work', key: 'availableForWork', type: 'checkbox' },
   { label: 'Hero Typing Texts (comma separated)', key: 'heroTypingTexts', type: 'text' },
-  { label: 'Projects Built (e.g. 12+)', key: 'projectsCount', type: 'text' },
+  { label: 'Projects delivered (e.g. 12+)', key: 'projectsCount', type: 'text' },
   { label: 'Technologies (e.g. 20+)', key: 'technologiesCount', type: 'text' },
-  { label: 'Year of Study (e.g. 3rd)', key: 'yearOfStudy', type: 'text' },
-  { label: 'Cups of Coffee (e.g. ∞)', key: 'coffeeCups', type: 'text' },
+  { label: 'Years building (e.g. 3+)', key: 'yearOfStudy', type: 'text' },
+  { label: 'Core domains (e.g. 4+)', key: 'coffeeCups', type: 'text' },
 ]
 
 function ProfilePanel({ token }: { token: string | null }) {
@@ -275,18 +247,35 @@ function ProfilePanel({ token }: { token: string | null }) {
 
   if (loading) return (
     <div className="text-center py-20">
-      <div className="font-mono-tech text-sm animate-pulse" style={{ color: '#00fff0' }}>
-        &gt; Loading profile...
+      <div className="text-sm text-[var(--text-muted)] animate-pulse">
+        Loading profile...
       </div>
     </div>
   )
 
   return (
-    <div className="rounded-xl p-6" style={{ background: '#0d0d1a', border: '1px solid rgba(0,255,240,0.2)' }}>
+    <div className="rounded-xl p-6 surface-card">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2 flex flex-col sm:flex-row gap-6 items-start p-4 rounded-lg border border-[var(--border)] bg-white/[0.02]">
+          <ProfileAvatar src={profile.profileImage} name={profile.name} size={120} />
+          <div className="flex-1 min-w-0">
+            <AdminField
+              label="Profile image URL"
+              value={profile.profileImage}
+              onChange={v => set('profileImage', v)}
+              type="text"
+            />
+            <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
+              Use a Google Drive share link set to &quot;Anyone with the link&quot;. Example:{' '}
+              <code className="text-[var(--accent)]">https://drive.google.com/file/d/FILE_ID/view</code>
+              . For best reliability, place a file at <code>/public/profile.jpg</code> and use{' '}
+              <code>/profile.jpg</code>.
+            </p>
+          </div>
+        </div>
         {PROFILE_FIELDS.map(f => (
           <div key={f.key} className={f.type === 'textarea' || f.key === 'heroTypingTexts' ? 'md:col-span-2' : ''}>
-            <NeonInput
+            <AdminField
               label={f.label}
               value={String(profile[f.key as keyof ProfileData] ?? '')}
               onChange={v => set(f.key, v)}
@@ -297,11 +286,9 @@ function ProfilePanel({ token }: { token: string | null }) {
         ))}
       </div>
       <div className="mt-6 flex justify-end">
-        <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 px-8 py-3 font-orbitron text-xs font-bold tracking-widest uppercase rounded-lg transition-all hover:scale-105 disabled:opacity-50"
-          style={{ background: 'rgba(0,255,240,0.1)', border: '1px solid var(--cyan)', color: 'var(--cyan)', boxShadow: '0 0 15px rgba(0,255,240,0.2)' }}>
-          <FaSave size={12} /> {saving ? 'Saving...' : 'Save Profile'}
-        </button>
+        <Button onClick={handleSave} disabled={saving} variant="primary" size="lg">
+          <FaSave size={12} /> {saving ? 'Saving...' : 'Save profile'}
+        </Button>
       </div>
     </div>
   )
@@ -319,10 +306,12 @@ const TAB_CONFIG: Record<Exclude<Tab, 'profile'>, {
     label: 'Projects', icon: <FaFolder />, color: '#00fff0',
     endpoint: '/api/projects',
     deleteEndpoint: (id) => `/api/projects/${id}`,
-    emptyForm: { title: '', description: '', category: 'AI', tags: '', techStack: '', github: '', demo: '', featured: false },
+    emptyForm: { title: '', description: '', longDescription: '', category: 'AI', tags: '', techStack: '', github: '', demo: '', image: '', featured: false },
     fields: [
       { label: 'Title', key: 'title', type: 'text' },
-      { label: 'Description', key: 'description', type: 'textarea' },
+      { label: 'Short description', key: 'description', type: 'textarea' },
+      { label: 'Case study (markdown)', key: 'longDescription', type: 'textarea' },
+      { label: 'Image URL (Drive or direct)', key: 'image', type: 'text' },
       { label: 'Category', key: 'category', type: 'select', options: ['AI', 'ML', 'CV', 'Web', 'Robotics', 'Other'] },
       { label: 'Tags (comma separated)', key: 'tags', type: 'text' },
       { label: 'Tech Stack (comma separated)', key: 'techStack', type: 'text' },
@@ -490,12 +479,12 @@ const TAB_CONFIG: Record<Exclude<Tab, 'profile'>, {
 /* ── Sidebar ────────────────────────────────────────────── */
 const SIDEBAR_TABS: { key: Tab; label: string; icon: React.ReactNode; color: string }[] = [
   { key: 'profile',    label: 'Profile',     icon: <FaUser />,      color: '#a78bfa' },
-  { key: 'focus',      label: 'Focus Areas', icon: <FaBrain />,     color: '#00fff0' },
-  { key: 'projects',   label: 'Projects',    icon: <FaFolder />,    color: '#00fff0' },
-  { key: 'blogs',      label: 'Blog Posts',  icon: <FaNewspaper />, color: '#ff00ff' },
-  { key: 'skills',     label: 'Skills',      icon: <FaTools />,     color: '#00ff88' },
-  { key: 'experience', label: 'Experience',  icon: <FaBriefcase />, color: '#ffff00' },
-  { key: 'messages',   label: 'Messages',    icon: <FaEnvelope />,  color: '#ff6600' },
+  { key: 'focus',      label: 'Focus Areas', icon: <FaBrain />,     color: '#38bdf8' },
+  { key: 'projects',   label: 'Projects',    icon: <FaFolder />,    color: '#38bdf8' },
+  { key: 'blogs',      label: 'Blog Posts',  icon: <FaNewspaper />, color: '#a78bfa' },
+  { key: 'skills',     label: 'Skills',      icon: <FaTools />,     color: '#34d399' },
+  { key: 'experience', label: 'Experience',  icon: <FaBriefcase />, color: '#fbbf24' },
+  { key: 'messages',   label: 'Messages',    icon: <FaEnvelope />,  color: '#f472b6' },
   { key: 'privateNotes', label: 'Private Notes', icon: <FaUserSecret />, color: '#f97316' },
 ]
 
@@ -503,10 +492,10 @@ function Sidebar({ active, setActive }: { active: Tab; setActive: (t: Tab) => vo
   return (
     <aside className="w-56 flex-shrink-0 flex flex-col gap-1 py-4 pr-4">
       <div className="mb-6 px-2">
-        <div className="font-orbitron font-black text-sm" style={{ color: 'var(--cyan)', textShadow: '0 0 10px var(--cyan)' }}>
-          ADMIN PANEL
+        <div className="font-semibold text-sm text-[var(--accent)]">
+          Admin panel
         </div>
-        <div className="font-mono-tech text-xs mt-1" style={{ color: 'var(--dim)' }}>aman@portfolio.dev</div>
+        <div className="text-xs mt-1 text-[var(--text-muted)]">aman@portfolio.dev</div>
       </div>
       {SIDEBAR_TABS.map(({ key, label, icon, color }) => {
         const isActive = active === key
@@ -520,7 +509,7 @@ function Sidebar({ active, setActive }: { active: Tab; setActive: (t: Tab) => vo
               boxShadow: isActive ? `0 0 12px ${color}22` : 'none',
             }}>
             <span style={{ fontSize: 13 }}>{icon}</span>
-            <span className="font-orbitron text-xs font-semibold tracking-wide">{label}</span>
+            <span className="text-xs font-medium">{label}</span>
           </button>
         )
       })}
@@ -660,8 +649,8 @@ export default function AdminPage() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="font-mono-tech text-sm animate-pulse" style={{ color: 'var(--cyan)' }}>
-          &gt; Verifying access...
+        <div className="text-sm text-[var(--text-muted)] animate-pulse">
+          Verifying access...
         </div>
       </div>
     )
@@ -677,20 +666,18 @@ export default function AdminPage() {
           className="w-full max-w-sm"
         >
           <div className="text-center mb-8">
-            <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-full"
-              style={{ background: 'rgba(255,0,255,0.1)', border: '1px solid var(--magenta)', color: 'var(--magenta)', boxShadow: '0 0 20px rgba(255,0,255,0.2)' }}>
+            <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center rounded-xl bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/30">
               <FaLock size={20} />
             </div>
-            <h1 className="font-orbitron font-black text-xl" style={{ color: 'var(--cyan)' }}>ADMIN ACCESS</h1>
-            <p className="font-mono-tech text-xs mt-2" style={{ color: 'var(--dim)' }}>Restricted zone — authenticate to proceed</p>
+            <h1 className="font-bold text-xl text-[var(--text)]">Admin access</h1>
+            <p className="text-sm mt-2 text-[var(--text-muted)]">Sign in to manage your portfolio</p>
           </div>
 
-          <form onSubmit={handleLogin} className="cyber-card rounded-xl p-6 space-y-4"
-            style={{ borderColor: 'rgba(0,255,240,0.25)', background: '#0d0d1a' }}>
-            <NeonInput label="Email" value={email} onChange={setEmail} type="email" required />
+          <form onSubmit={handleLogin} className="surface-card rounded-xl p-6 space-y-4">
+            <AdminField label="Email" value={email} onChange={setEmail} type="email" required />
             <div>
-              <label className="font-mono-tech text-xs block mb-1.5" style={{ color: 'var(--cyan)' }}>
-                Password <span style={{ color: 'var(--magenta)' }}>*</span>
+              <label className="text-sm font-medium text-[var(--text-muted)] block mb-1.5">
+                Password <span className="text-[var(--accent)]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -698,27 +685,17 @@ export default function AdminPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
-                  className="w-full pr-10"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(0,255,240,0.2)',
-                    color: 'var(--text)', outline: 'none', fontFamily: '"Share Tech Mono", monospace',
-                    fontSize: 13, padding: '10px 14px', borderRadius: 8, width: '100%',
-                  }}
-                  onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
-                  onBlur={e => (e.target.style.borderColor = 'rgba(0,255,240,0.2)')}
+                  className={cn(adminFieldClass, 'pr-10')}
                 />
                 <button type="button" onClick={() => setShowPass(p => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  style={{ color: 'var(--dim)' }}>
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
                   {showPass ? <FaEyeSlash size={13} /> : <FaEye size={13} />}
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={loginLoading}
-              className="w-full py-3 font-orbitron font-bold text-xs tracking-widest uppercase rounded-lg transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 mt-2"
-              style={{ background: 'rgba(0,255,240,0.1)', border: '1px solid var(--cyan)', color: 'var(--cyan)', boxShadow: '0 0 15px rgba(0,255,240,0.15)' }}>
-              {loginLoading ? '// Authenticating...' : '> Login_'}
-            </button>
+            <Button type="submit" disabled={loginLoading} variant="primary" size="lg" className="w-full mt-2">
+              {loginLoading ? 'Signing in...' : 'Sign in'}
+            </Button>
           </form>
         </motion.div>
       </div>
@@ -733,22 +710,10 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-60 z-30 pt-16 px-4 flex flex-col"
-        style={{ background: 'rgba(13,13,26,0.95)', borderRight: '1px solid rgba(0,255,240,0.1)', backdropFilter: 'blur(8px)' }}>
+      <div className="fixed left-0 top-0 h-full w-60 z-30 pt-16 px-4 flex flex-col bg-[var(--surface)]/95 border-r border-[var(--border)] backdrop-blur-xl">
         <Sidebar active={activeTab} setActive={(t) => { setActiveTab(t); setItems([]) }} />
         <button onClick={handleLogout}
-          className="mt-auto mb-6 flex items-center gap-2 px-3 py-2.5 rounded-lg font-orbitron text-xs font-semibold uppercase tracking-wider transition-all"
-          style={{ color: 'rgba(255,0,0,0.6)', border: '1px solid rgba(255,0,0,0.2)' }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLElement).style.color = '#ff4444'
-            ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,0,0.5)'
-            ;(e.currentTarget as HTMLElement).style.background = 'rgba(255,0,0,0.08)'
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLElement).style.color = 'rgba(255,0,0,0.6)'
-            ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,0,0,0.2)'
-            ;(e.currentTarget as HTMLElement).style.background = 'transparent'
-          }}>
+          className="mt-auto mb-6 flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-medium text-red-400/80 border border-red-500/20 hover:bg-red-500/10 hover:text-red-400 transition-all">
           <FaSignOutAlt size={12} /> Logout
         </button>
       </div>
@@ -766,27 +731,28 @@ export default function AdminPage() {
             <div>
               <div className="flex items-center gap-3">
                 <span style={{ color: tabMeta.color, fontSize: 18 }}>{tabMeta.icon}</span>
-                <h1 className="font-orbitron font-black text-lg" style={{ color: tabMeta.color, textShadow: `0 0 10px ${tabMeta.color}` }}>
+                <h1 className="font-bold text-lg" style={{ color: tabMeta.color }}>
                   {tabMeta.label}
                 </h1>
                 {!isProfileTab && (
-                  <span className="font-mono-tech text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: `${tabMeta.color}12`, color: tabMeta.color, border: `1px solid ${tabMeta.color}25` }}>
+                  <span className="text-xs px-2 py-0.5 rounded-full border"
+                    style={{ background: `${tabMeta.color}12`, color: tabMeta.color, borderColor: `${tabMeta.color}30` }}>
                     {items.length}
                   </span>
                 )}
               </div>
-              <p className="font-mono-tech text-xs mt-1" style={{ color: 'var(--dim)' }}>
-                &gt; {isProfileTab ? 'edit your public profile' : `manage /${activeTab}`}
+              <p className="text-xs mt-1 text-[var(--text-muted)]">
+                {isProfileTab ? 'Edit your public profile' : `Manage ${activeTab}`}
               </p>
             </div>
             {!isProfileTab && cfg && activeTab !== 'messages' && (
-              <button
+              <Button
                 onClick={() => setModal({ open: true, mode: 'create' })}
-                className="flex items-center gap-2 px-5 py-2.5 font-orbitron font-bold text-xs tracking-widest uppercase rounded-lg transition-all hover:scale-105"
-                style={{ background: `${tabMeta.color}12`, border: `1px solid ${tabMeta.color}`, color: tabMeta.color, boxShadow: `0 0 15px ${tabMeta.color}22` }}>
+                variant="outline"
+                size="sm"
+              >
                 <FaPlus size={11} /> New
-              </button>
+              </Button>
             )}
           </motion.div>
 
@@ -797,15 +763,14 @@ export default function AdminPage() {
           {!isProfileTab && cfg && (
             dataLoading ? (
               <div className="text-center py-20">
-                <div className="font-mono-tech text-sm animate-pulse" style={{ color: tabMeta.color }}>
-                  &gt; Loading {activeTab}...
+                <div className="text-sm text-[var(--text-muted)] animate-pulse">
+                  Loading {activeTab}...
                 </div>
               </div>
             ) : items.length === 0 ? (
-              <div className="text-center py-20 rounded-xl"
-                style={{ background: '#0d0d1a', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="text-center py-20 rounded-xl surface-card">
                 <div className="text-4xl mb-3">📭</div>
-                <p className="font-mono-tech text-sm" style={{ color: 'var(--dim)' }}>
+                <p className="text-sm text-[var(--text-muted)]">
                   No {activeTab} found. {activeTab !== 'messages' && 'Create your first one!'}
                 </p>
               </div>
@@ -817,16 +782,12 @@ export default function AdminPage() {
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.04 }}
-                    className="rounded-xl p-4 flex items-center gap-4"
-                    style={{ background: '#0d0d1a', border: '1px solid rgba(255,255,255,0.06)', transition: 'border-color 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = `${tabMeta.color}30`}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'}
+                    className="rounded-xl p-4 flex items-center gap-4 surface-card"
                   >
                     <div className="flex-1 min-w-0">
                       {cfg.renderRow(item)}
                       {activeTab === 'messages' && expandedMsg === String(item._id) && (
-                        <p className="font-body text-sm mt-3 leading-relaxed"
-                          style={{ color: 'rgba(200,200,232,0.7)', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: 8, borderLeft: '2px solid var(--cyan)' }}>
+                        <p className="text-sm mt-3 leading-relaxed text-[var(--text-muted)] bg-white/[0.03] p-3 rounded-lg border-l-2 border-[var(--accent)]">
                           {String(item.message)}
                         </p>
                       )}
@@ -836,8 +797,7 @@ export default function AdminPage() {
                       {activeTab === 'messages' ? (
                         <button
                           onClick={() => setExpandedMsg(expandedMsg === String(item._id) ? null : String(item._id))}
-                          className="w-8 h-8 flex items-center justify-center rounded transition-all hover:scale-110"
-                          style={{ color: 'var(--cyan)', border: '1px solid rgba(0,255,240,0.2)' }}>
+                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--accent)] hover:bg-white/5 transition-all">
                           <FaEye size={12} />
                         </button>
                       ) : (
@@ -849,8 +809,7 @@ export default function AdminPage() {
                             if (Array.isArray(formItem.keywords)) formItem.keywords = (formItem.keywords as string[]).join(', ')
                             setModal({ open: true, mode: 'edit', item: formItem })
                           }}
-                          className="w-8 h-8 flex items-center justify-center rounded transition-all hover:scale-110"
-                          style={{ color: 'var(--cyan)', border: '1px solid rgba(0,255,240,0.2)' }}>
+                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--accent)] hover:bg-white/5 transition-all">
                           <FaEdit size={12} />
                         </button>
                       )}

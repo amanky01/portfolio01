@@ -5,6 +5,7 @@ export default function MatrixRain({ opacity = 0.12 }: { opacity?: number }) {
   const ref = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const canvas = ref.current!
     const ctx = canvas.getContext('2d')!
     let W = canvas.width = canvas.offsetWidth
@@ -17,8 +18,8 @@ export default function MatrixRain({ opacity = 0.12 }: { opacity?: number }) {
     const draw = () => {
       ctx.fillStyle = `rgba(7,7,15,0.05)`
       ctx.fillRect(0, 0, W, H)
-      ctx.fillStyle = `rgba(0,255,240,${opacity})`
-      ctx.font = '14px Share Tech Mono, monospace'
+      ctx.fillStyle = `rgba(56,189,248,${opacity})`
+      ctx.font = '12px JetBrains Mono, monospace'
 
       drops.forEach((y, i) => {
         const char = chars[Math.floor(Math.random() * chars.length)]
