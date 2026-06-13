@@ -1,5 +1,4 @@
 'use client'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope } from 'react-icons/fa'
 import { useProfileData } from '@/hooks/useProfileData'
@@ -7,11 +6,6 @@ import { Badge } from '@/components/ui'
 
 export default function Footer() {
   const { profile } = useProfileData()
-  const [year, setYear] = useState(2026)
-
-  useEffect(() => {
-    setYear(new Date().getFullYear())
-  }, [])
 
   const ensureAbsoluteUrl = (url: string | undefined) => {
     if (!url) return undefined
@@ -37,10 +31,11 @@ export default function Footer() {
             <p className="text-[var(--text-muted)] text-sm mb-4">
               {profile.tagline || 'AI · ML · Computer Vision'}
             </p>
-            <p className="text-[var(--text-muted)] text-sm leading-relaxed">
-              Building intelligent systems that bridge the gap between human intelligence and
-              machine capability.
-            </p>
+            {profile.bio?.trim() && (
+              <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+                {profile.bio.trim()}
+              </p>
+            )}
           </div>
 
           <div>
@@ -88,16 +83,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-[var(--border)] mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-[var(--text-muted)] text-sm">
-            © {year} {profile.name || 'Aman Kumar Yadav'}. All rights reserved.
-          </p>
-          <div className="flex items-center gap-2 flex-wrap justify-center">
-            {profile.availableForWork && (
-              <Badge variant="success">Open to opportunities</Badge>
-            )}
+        {profile.availableForWork && (
+          <div className="border-t border-[var(--border)] mt-10 pt-6 flex justify-center sm:justify-end">
+            <Badge variant="success">Open to opportunities</Badge>
           </div>
-        </div>
+        )}
       </div>
     </footer>
   )

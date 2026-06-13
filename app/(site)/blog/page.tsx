@@ -39,7 +39,7 @@ export default function BlogPage() {
           <SectionHeader
             eyebrow="Writing"
             title="Blog"
-            description="Thoughts on AI, ML, computer vision, and building things"
+            description="Personal Stories and learnings about technology and life"
             align="center"
           />
         </motion.div>
