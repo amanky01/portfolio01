@@ -273,6 +273,18 @@ async function seed() {
   })
   console.log('✅ Profile seeded')
 
+  const seedEmail = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase()
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD
+  if (seedEmail && seedPassword) {
+    const AdminModel = (await import('../models/Admin')).default
+    const { hashPassword } = await import('./password')
+    const passwordHash = await hashPassword(seedPassword)
+    await AdminModel.create({ email: seedEmail, passwordHash })
+    console.log('✅ Admin seeded')
+  } else {
+    console.log('⚠️  Admin not seeded — run: npm run seed:admin (with SEED_ADMIN_EMAIL + SEED_ADMIN_PASSWORD)')
+  }
+
   console.log('\n🎉 Database seeded successfully!')
   process.exit(0)
 }

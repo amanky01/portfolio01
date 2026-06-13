@@ -88,10 +88,14 @@ cp .env.example .env.local
 \`\`\`env
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/portfolio
 JWT_SECRET=some-very-long-random-secret-string-here
-ADMIN_EMAIL=aman@yourdomain.com
-ADMIN_PASSWORD=your-admin-password
 GEMINI_API_KEY=your-gemini-api-key-from-google-ai-studio
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+\`\`\`
+
+Admin login is stored in MongoDB (bcrypt hash), not in \`.env\`. Create it with:
+
+\`\`\`bash
+SEED_ADMIN_EMAIL=you@site.com SEED_ADMIN_PASSWORD='your-strong-password' npm run seed:admin
 \`\`\`
 
 ### 3. Seed the Database (optional)
@@ -100,7 +104,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 npm run seed
 \`\`\`
 
-This will populate MongoDB with sample projects, skills, and experience data.
+This will populate MongoDB with sample projects, skills, and experience data. Set \`SEED_ADMIN_EMAIL\` and \`SEED_ADMIN_PASSWORD\` first if you want admin seeded during a full reset.
 
 ### 4. Run Development Server
 
@@ -116,7 +120,7 @@ Open [http://localhost:3000](http://localhost:3000)
 
 Navigate to `/admin` to access the dashboard.
 
-**Login with** the email/password from your \`.env.local\`.
+**Login with** the email and password you seeded into MongoDB (\`npm run seed:admin\`).
 
 From the dashboard you can:
 - **Projects** — Create, edit, delete projects with category, tags, GitHub/demo links

@@ -1,34 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import connectDB from '@/lib/db'
+import Admin from '@/models/Admin'
 import { signToken } from '@/lib/auth'
+import { verifyPassword } from '@/lib/password'
 
 export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json()
-    const adminEmail = process.env.ADMIN_EMAIL
-    const adminPassword = process.env.ADMIN_PASSWORD
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
-    if (email !== adminEmail) {
+    await connectDB()
+
+    const admin = await Admin.findOne({ email: String(email).trim().toLowerCase() }).select('+passwordHash')
+    if (!admin) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    // Support both plain text (dev) and bcrypt hashed passwords
-    const isValid = adminPassword
-      ? (adminPassword.startsWith('$2') 
-          ? await bcrypt.compare(password, adminPassword)
-          : password === adminPassword)
-      : false
-
+    const isValid = await verifyPassword(String(password), admin.passwordHash)
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    const token = signToken({ email })
-    const response = NextResponse.json({ success: true, token, email })
+    const token = signToken({ email: admin.email })
+    const response = NextResponse.json({ success: true, token, email: admin.email })
     response.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

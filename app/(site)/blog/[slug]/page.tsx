@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown'
 import FloatingParticles from '@/components/animations/FloatingParticles'
 import type { BlogPost } from '@/types'
 import { Card, Badge } from '@/components/ui'
+import { BlogComments } from '@/components/blog/BlogComments'
 
 const STATIC_POST: BlogPost = {
   _id: '1',
@@ -129,6 +130,8 @@ export default function BlogSlugPage() {
           <div className="prose-portfolio">
             <ReactMarkdown>{post.content}</ReactMarkdown>
           </div>
+
+          <BlogComments blogSlug={post.slug} />
         </motion.div>
       </div>
     </main>

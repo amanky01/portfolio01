@@ -5,16 +5,17 @@ import toast from 'react-hot-toast'
 import {
   FaLock, FaSignOutAlt, FaPlus, FaEdit, FaTrash,
   FaFolder, FaNewspaper, FaTools, FaBriefcase, FaEnvelope,
-  FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain, FaUserSecret
+  FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain, FaUserSecret, FaComment, FaCheck
 } from 'react-icons/fa'
 import { Button, ProfileAvatar } from '@/components/ui'
+import { BlogEditor, EMPTY_BLOG_FORM, blogItemToForm, type BlogFormData } from '@/components/admin/BlogEditor'
 import { cn, slugify } from '@/lib/utils'
 
 const adminFieldClass =
   'w-full rounded-lg border border-[var(--border)] bg-white/[0.04] px-4 py-2.5 text-sm text-[var(--text)] outline-none transition-colors focus:border-[var(--accent)]/50'
 
 /* ── Types ─────────────────────────────────────────────── */
-type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'skills' | 'experience' | 'messages' | 'privateNotes'
+type Tab = 'profile' | 'focus' | 'projects' | 'blogs' | 'comments' | 'skills' | 'experience' | 'messages' | 'privateNotes'
 
 interface FormField { label: string; key: string; type: string; options?: string[] }
 
@@ -339,14 +340,7 @@ const TAB_CONFIG: Record<Exclude<Tab, 'profile'>, {
     endpoint: '/api/blogs',
     deleteEndpoint: (id) => `/api/blogs/${id}`,
     emptyForm: { title: '', slug: '', excerpt: '', content: '', tags: '', published: false },
-    fields: [
-      { label: 'Title', key: 'title', type: 'text' },
-      { label: 'Slug (auto-generated if empty)', key: 'slug', type: 'text' },
-      { label: 'Excerpt', key: 'excerpt', type: 'textarea' },
-      { label: 'Content (Markdown)', key: 'content', type: 'textarea' },
-      { label: 'Tags (comma separated)', key: 'tags', type: 'text' },
-      { label: 'Published', key: 'published', type: 'checkbox' },
-    ],
+    fields: [],
     renderRow: (item) => (
       <div>
         <div className="font-orbitron font-bold text-sm text-white">{String(item.title)}</div>
@@ -357,6 +351,29 @@ const TAB_CONFIG: Record<Exclude<Tab, 'profile'>, {
             {Boolean(item.published) ? '● LIVE' : '○ DRAFT'}
           </span>
         </div>
+      </div>
+    ),
+  },
+  comments: {
+    label: 'Comments', icon: <FaComment />, color: '#22d3ee',
+    endpoint: '/api/comments',
+    deleteEndpoint: (id) => `/api/comments/${id}`,
+    emptyForm: {},
+    fields: [],
+    renderRow: (item) => (
+      <div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-orbitron font-bold text-sm text-white">{String(item.name)}</span>
+          <span className="font-mono-tech text-xs" style={{ color: 'var(--dim)' }}>{String(item.email)}</span>
+          <span className={`font-mono-tech text-xs px-2 py-0.5 rounded-full ${Boolean(item.approved) ? 'text-green-400' : 'text-yellow-400'}`}
+            style={{ background: Boolean(item.approved) ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,0,0.1)' }}>
+            {Boolean(item.approved) ? '● APPROVED' : '○ PENDING'}
+          </span>
+        </div>
+        <div className="font-mono-tech text-xs mt-1" style={{ color: 'var(--dim)' }}>
+          on {String(item.blogTitle)} · /{String(item.blogSlug)}
+        </div>
+        <p className="text-sm mt-2 text-[var(--text-muted)] line-clamp-2">{String(item.body)}</p>
       </div>
     ),
   },
@@ -482,6 +499,7 @@ const SIDEBAR_TABS: { key: Tab; label: string; icon: React.ReactNode; color: str
   { key: 'focus',      label: 'Focus Areas', icon: <FaBrain />,     color: '#38bdf8' },
   { key: 'projects',   label: 'Projects',    icon: <FaFolder />,    color: '#38bdf8' },
   { key: 'blogs',      label: 'Blog Posts',  icon: <FaNewspaper />, color: '#a78bfa' },
+  { key: 'comments',   label: 'Comments',    icon: <FaComment />,   color: '#22d3ee' },
   { key: 'skills',     label: 'Skills',      icon: <FaTools />,     color: '#34d399' },
   { key: 'experience', label: 'Experience',  icon: <FaBriefcase />, color: '#fbbf24' },
   { key: 'messages',   label: 'Messages',    icon: <FaEnvelope />,  color: '#f472b6' },
@@ -534,9 +552,17 @@ export default function AdminPage() {
   const [modal, setModal] = useState<{
     open: boolean; mode: 'create' | 'edit'; item?: Record<string, unknown>
   }>({ open: false, mode: 'create' })
+  const [blogEditor, setBlogEditor] = useState<{
+    open: boolean
+    mode: 'create' | 'edit'
+    itemId?: string
+    initialData: BlogFormData
+    loadingContent: boolean
+  }>({ open: false, mode: 'create', initialData: EMPTY_BLOG_FORM, loadingContent: false })
   const [saveLoading, setSaveLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [expandedMsg, setExpandedMsg] = useState<string | null>(null)
+  const [expandedComment, setExpandedComment] = useState<string | null>(null)
 
   // Check existing auth
   useEffect(() => {
@@ -598,6 +624,82 @@ export default function AdminPage() {
     toast.success('Logged out.')
   }
 
+  const openBlogEditor = async (mode: 'create' | 'edit', item?: Record<string, unknown>) => {
+    if (mode === 'create') {
+      setBlogEditor({
+        open: true,
+        mode: 'create',
+        initialData: EMPTY_BLOG_FORM,
+        loadingContent: false,
+      })
+      return
+    }
+
+    const itemId = String(item?._id ?? '')
+    setBlogEditor({
+      open: true,
+      mode: 'edit',
+      itemId,
+      initialData: blogItemToForm(item ?? {}),
+      loadingContent: true,
+    })
+
+    try {
+      const res = await fetch(`/api/blogs/${itemId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const d = await res.json()
+      if (d.success && d.data) {
+        setBlogEditor(prev => ({
+          ...prev,
+          initialData: blogItemToForm(d.data as Record<string, unknown>),
+          loadingContent: false,
+        }))
+      } else {
+        toast.error(d.error || 'Failed to load blog content')
+        setBlogEditor(prev => ({ ...prev, open: false, loadingContent: false }))
+      }
+    } catch {
+      toast.error('Failed to load blog content')
+      setBlogEditor(prev => ({ ...prev, open: false, loadingContent: false }))
+    }
+  }
+
+  const handleBlogSave = async (formData: BlogFormData) => {
+    setSaveLoading(true)
+    const body: Record<string, unknown> = {
+      ...formData,
+      tags: formData.tags.split(',').map(s => s.trim()).filter(Boolean),
+    }
+    if (typeof body.slug === 'string' && !body.slug.trim() && body.title) {
+      body.slug = slugify(String(body.title))
+    }
+
+    const isEdit = blogEditor.mode === 'edit' && blogEditor.itemId
+    const url = isEdit ? `/api/blogs/${blogEditor.itemId}` : '/api/blogs'
+    const method = isEdit ? 'PUT' : 'POST'
+
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
+      })
+      const d = await res.json()
+      if (d.success) {
+        toast.success(isEdit ? 'Blog updated!' : 'Blog created!')
+        setBlogEditor(prev => ({ ...prev, open: false, loadingContent: false }))
+        fetchData()
+      } else {
+        toast.error(d.error || 'Failed to save blog')
+      }
+    } catch {
+      toast.error('Network error')
+    } finally {
+      setSaveLoading(false)
+    }
+  }
+
   const handleSave = async (formData: Record<string, unknown>) => {
     setSaveLoading(true)
     const cfg = TAB_CONFIG[activeTab as Exclude<Tab, 'profile'>]
@@ -650,6 +752,19 @@ export default function AdminPage() {
       else toast.error('Failed to delete')
     } catch { toast.error('Network error') }
     finally { setDeleteTarget(null) }
+  }
+
+  const handleApproveComment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ approved: true }),
+      })
+      const d = await res.json()
+      if (d.success) { toast.success('Comment approved!'); fetchData() }
+      else toast.error(d.error || 'Failed to approve')
+    } catch { toast.error('Network error') }
   }
 
   // ── Loading screen ──
@@ -752,9 +867,12 @@ export default function AdminPage() {
                 {isProfileTab ? 'Edit your public profile' : `Manage ${activeTab}`}
               </p>
             </div>
-            {!isProfileTab && cfg && activeTab !== 'messages' && (
+            {!isProfileTab && cfg && activeTab !== 'messages' && activeTab !== 'comments' && (
               <Button
-                onClick={() => setModal({ open: true, mode: 'create' })}
+                onClick={() => {
+                  if (activeTab === 'blogs') openBlogEditor('create')
+                  else setModal({ open: true, mode: 'create' })
+                }}
                 variant="outline"
                 size="sm"
               >
@@ -778,7 +896,7 @@ export default function AdminPage() {
               <div className="text-center py-20 rounded-xl surface-card">
                 <div className="text-4xl mb-3">📭</div>
                 <p className="text-sm text-[var(--text-muted)]">
-                  No {activeTab} found. {activeTab !== 'messages' && 'Create your first one!'}
+                  No {activeTab} found.{activeTab !== 'messages' && activeTab !== 'comments' && ' Create your first one!'}
                 </p>
               </div>
             ) : (
@@ -798,18 +916,43 @@ export default function AdminPage() {
                           {String(item.message)}
                         </p>
                       )}
+                      {activeTab === 'comments' && expandedComment === String(item._id) && (
+                        <p className="text-sm mt-3 leading-relaxed text-[var(--text-muted)] bg-white/[0.03] p-3 rounded-lg border-l-2 border-[var(--accent)] whitespace-pre-wrap">
+                          {String(item.body)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      {activeTab === 'messages' ? (
-                        <button
-                          onClick={() => setExpandedMsg(expandedMsg === String(item._id) ? null : String(item._id))}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--accent)] hover:bg-white/5 transition-all">
-                          <FaEye size={12} />
-                        </button>
+                      {activeTab === 'messages' || activeTab === 'comments' ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              if (activeTab === 'messages') {
+                                setExpandedMsg(expandedMsg === String(item._id) ? null : String(item._id))
+                              } else {
+                                setExpandedComment(expandedComment === String(item._id) ? null : String(item._id))
+                              }
+                            }}
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border)] text-[var(--accent)] hover:bg-white/5 transition-all">
+                            <FaEye size={12} />
+                          </button>
+                          {activeTab === 'comments' && !Boolean(item.approved) && (
+                            <button
+                              onClick={() => handleApproveComment(String(item._id))}
+                              title="Approve comment"
+                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-green-500/30 text-green-400 hover:bg-green-500/10 transition-all">
+                              <FaCheck size={12} />
+                            </button>
+                          )}
+                        </>
                       ) : (
                         <button
                           onClick={() => {
+                            if (activeTab === 'blogs') {
+                              openBlogEditor('edit', item)
+                              return
+                            }
                             const formItem: Record<string, unknown> = { ...item }
                             if (Array.isArray(formItem.tags)) formItem.tags = (formItem.tags as string[]).join(', ')
                             if (Array.isArray(formItem.techStack)) formItem.techStack = (formItem.techStack as string[]).join(', ')
@@ -837,9 +980,9 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* CRUD Modal */}
+      {/* CRUD Modal (non-blog tabs) */}
       <AnimatePresence>
-        {modal.open && cfg && (
+        {modal.open && cfg && activeTab !== 'blogs' && (
           <CrudModal
             title={`${modal.mode === 'edit' ? 'Edit' : 'New'} ${tabMeta.label.replace(/s$/, '')}`}
             fields={cfg.fields}
@@ -847,6 +990,20 @@ export default function AdminPage() {
             onSave={handleSave}
             onClose={() => setModal({ open: false, mode: 'create' })}
             loading={saveLoading}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Full-page blog editor */}
+      <AnimatePresence>
+        {blogEditor.open && (
+          <BlogEditor
+            mode={blogEditor.mode}
+            initialData={blogEditor.initialData}
+            loadingContent={blogEditor.loadingContent}
+            saving={saveLoading}
+            onSave={handleBlogSave}
+            onClose={() => setBlogEditor(prev => ({ ...prev, open: false, loadingContent: false }))}
           />
         )}
       </AnimatePresence>

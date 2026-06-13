@@ -28,6 +28,19 @@ export interface BlogPost {
   updatedAt: string
 }
 
+export interface BlogComment {
+  _id: string
+  blog: string
+  blogSlug: string
+  blogTitle: string
+  name: string
+  email: string
+  body: string
+  approved: boolean
+  createdAt: string
+  updatedAt: string
+}
+
 export interface Skill {
   _id: string
   name: string

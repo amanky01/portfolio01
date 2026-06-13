@@ -9,7 +9,7 @@ export function signToken(payload: { email: string }): string {
 
 export function verifyToken(token: string): { email: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { email: string }
+    return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as { email: string }
   } catch {
     return null
   }

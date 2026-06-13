@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache'
 import mongoose from 'mongoose'
 import connectDB from '@/lib/db'
 import Blog from '@/models/Blog'
+import Comment from '@/models/Comment'
 import { isAuthenticated } from '@/lib/auth'
 import { calculateReadTime } from '@/lib/utils'
 
@@ -66,6 +67,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { slug: str
     await connectDB()
     const result = await Blog.findOneAndDelete(blogLookupFilter(params.slug))
     if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    await Comment.deleteMany({ blog: result._id })
     revalidateTag('blogs-data')
     return NextResponse.json({ success: true, message: 'Blog deleted' })
   } catch {
