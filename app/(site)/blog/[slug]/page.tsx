@@ -8,6 +8,7 @@ import FloatingParticles from '@/components/animations/FloatingParticles'
 import type { BlogPost } from '@/types'
 import { Card, Badge } from '@/components/ui'
 import { BlogComments } from '@/components/blog/BlogComments'
+import { BlogCoverImage } from '@/components/blog/BlogCoverImage'
 
 const STATIC_POST: BlogPost = {
   _id: '1',
@@ -105,6 +106,12 @@ export default function BlogSlugPage() {
           >
             ← Back to blog
           </Link>
+
+          <BlogCoverImage
+            src={post.coverImage}
+            title={post.title}
+            className="mb-8 border border-[var(--border)]"
+          />
 
           <Card className="p-8 mb-8">
             <div className="flex flex-wrap gap-2 mb-4">

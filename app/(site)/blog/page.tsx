@@ -5,6 +5,7 @@ import Link from 'next/link'
 import FloatingParticles from '@/components/animations/FloatingParticles'
 import type { BlogPost } from '@/types'
 import { SectionHeader, Card, Badge } from '@/components/ui'
+import { BlogCoverImage } from '@/components/blog/BlogCoverImage'
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([])
@@ -69,7 +70,13 @@ export default function BlogPage() {
                 transition={{ delay: i * 0.08 }}
               >
                 <Link href={`/blog/${post.slug}`} className="block group">
-                  <Card className="p-6">
+                  <Card className="overflow-hidden p-0">
+                    <BlogCoverImage
+                      src={post.coverImage}
+                      title={post.title}
+                      className="rounded-none group-hover:opacity-95 transition-opacity"
+                    />
+                    <div className="p-6">
                     <div className="flex items-start justify-between gap-4 mb-2">
                       <h2 className="font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors">
                         {post.title}
@@ -90,6 +97,7 @@ export default function BlogPage() {
                       <span className="text-sm text-[var(--accent)] group-hover:translate-x-0.5 transition-transform">
                         Read →
                       </span>
+                    </div>
                     </div>
                   </Card>
                 </Link>

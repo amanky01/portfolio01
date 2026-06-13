@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown'
 import { motion } from 'framer-motion'
 import { FaTimes, FaSave, FaEye, FaEdit, FaColumns } from 'react-icons/fa'
 import { Button, Badge } from '@/components/ui'
+import { BlogCoverImage } from '@/components/blog/BlogCoverImage'
 import { cn, slugify } from '@/lib/utils'
 
 export interface BlogFormData {
@@ -59,12 +60,13 @@ const VIEW_TABS: { key: ViewMode; label: string; icon: React.ReactNode }[] = [
   { key: 'preview', label: 'Preview', icon: <FaEye size={12} /> },
 ]
 
-function MarkdownPreview({ content, title, excerpt, tags }: Pick<BlogFormData, 'content' | 'title' | 'excerpt' | 'tags'>) {
+function MarkdownPreview({ content, title, excerpt, tags, coverImage }: Pick<BlogFormData, 'content' | 'title' | 'excerpt' | 'tags' | 'coverImage'>) {
   const tagList = tags.split(',').map(t => t.trim()).filter(Boolean)
 
   return (
     <div className="h-full overflow-y-auto p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
+        <BlogCoverImage src={coverImage} title={title.trim() || 'Untitled post'} className="mb-6" />
         {tagList.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {tagList.map(tag => (
@@ -224,9 +226,18 @@ export function BlogEditor({
                 type="text"
                 value={form.coverImage}
                 onChange={e => set('coverImage', e.target.value)}
-                placeholder="Optional hero image"
+                placeholder="https://... or /images/cover.jpg"
                 className={fieldClass}
               />
+              {form.coverImage.trim() && (
+                <div className="mt-3 rounded-lg overflow-hidden border border-[var(--border)]">
+                  <BlogCoverImage src={form.coverImage} title={form.title || 'Cover preview'} className="rounded-none" />
+                </div>
+              )}
+              <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
+                No fixed size required. Best at 16:9 (e.g. 1200×630). Google Drive share links work if set to
+                &quot;Anyone with the link&quot;, or use a direct URL / file in <code>/public</code>.
+              </p>
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -290,6 +301,7 @@ export function BlogEditor({
                     title={form.title}
                     excerpt={form.excerpt}
                     tags={form.tags}
+                    coverImage={form.coverImage}
                   />
                 </motion.div>
               )}
