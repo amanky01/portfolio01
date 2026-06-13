@@ -8,7 +8,7 @@ import {
   FaTimes, FaSave, FaEye, FaEyeSlash, FaUser, FaBrain, FaUserSecret
 } from 'react-icons/fa'
 import { Button, ProfileAvatar } from '@/components/ui'
-import { cn } from '@/lib/utils'
+import { cn, slugify } from '@/lib/utils'
 
 const adminFieldClass =
   'w-full rounded-lg border border-[var(--border)] bg-white/[0.04] px-4 py-2.5 text-sm text-[var(--text)] outline-none transition-colors focus:border-[var(--accent)]/50'
@@ -607,10 +607,17 @@ export default function AdminPage() {
     if (typeof body.keywords === 'string') body.keywords = (body.keywords as string).split(',').map(s => s.trim()).filter(Boolean)
 
     const isEdit = modal.mode === 'edit' && modal.item?._id
-    const url = isEdit && cfg.deleteEndpoint
-      ? cfg.deleteEndpoint(String(modal.item!._id))
-      : cfg.endpoint
+    const url =
+      isEdit && cfg.deleteEndpoint
+        ? activeTab === 'blogs'
+          ? `/api/blogs/${modal.item!._id}`
+          : cfg.deleteEndpoint(String(modal.item!._id))
+        : cfg.endpoint
     const method = isEdit ? 'PUT' : 'POST'
+
+    if (activeTab === 'blogs' && typeof body.slug === 'string' && !body.slug.trim() && body.title) {
+      body.slug = slugify(String(body.title))
+    }
 
     try {
       const res = await fetch(url, {

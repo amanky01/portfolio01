@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
+import mongoose from 'mongoose'
 import connectDB from '@/lib/db'
 import Blog from '@/models/Blog'
 import { isAuthenticated } from '@/lib/auth'
 import { calculateReadTime } from '@/lib/utils'
 
+/** Admin URLs may pass MongoDB _id; public URLs use slug */
+function blogLookupFilter(param: string) {
+  if (mongoose.Types.ObjectId.isValid(param) && String(new mongoose.Types.ObjectId(param)) === param) {
+    return { _id: param }
+  }
+  return { slug: param }
+}
+
 export async function GET(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
     await connectDB()
     const adminView = isAuthenticated(req)
-    const query = adminView ? { slug: params.slug } : { slug: params.slug, published: true }
+    const filter = blogLookupFilter(params.slug)
+    const query = adminView ? filter : { ...filter, published: true }
     const blog = await Blog.findOne(query).lean()
     if (!blog) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json(
@@ -33,7 +43,7 @@ export async function PUT(req: NextRequest, { params }: { params: { slug: string
     await connectDB()
     const body = await req.json()
     if (body.content) body.readTime = calculateReadTime(body.content)
-    const blog = await Blog.findOneAndUpdate({ slug: params.slug }, body, { new: true })
+    const blog = await Blog.findOneAndUpdate(blogLookupFilter(params.slug), body, { new: true })
     if (!blog) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     revalidateTag('blogs-data')
     return NextResponse.json({ success: true, data: blog })
@@ -54,7 +64,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { slug: str
   if (!isAuthenticated(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     await connectDB()
-    await Blog.findOneAndDelete({ slug: params.slug })
+    const result = await Blog.findOneAndDelete(blogLookupFilter(params.slug))
+    if (!result) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     revalidateTag('blogs-data')
     return NextResponse.json({ success: true, message: 'Blog deleted' })
   } catch {
